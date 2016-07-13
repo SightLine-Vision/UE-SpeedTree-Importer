@@ -86,6 +86,24 @@ AActor* FSpeedTreeImportModule::FindActorInSelected(FString ActorName)
 	return NULL;
 }
 
+void FSpeedTreeImportModule::deleteActors(FString ActorName, AActor* mainActor)
+{
+	AActor* TargetActor = NULL;
+
+	for (TActorIterator<AStaticMeshActor> It(GEditor->GetEditorWorldContext().World()); It; ++It)
+	{
+		TargetActor = static_cast<AActor*>(*It);
+
+		FString TreeName = TargetActor->GetName();
+		
+		if (TreeName.Contains(ActorName) && mainActor != TargetActor)
+		{
+			//GEditor->GetEditorWorldContext().World()->DestroyActor(TargetActor);
+			TargetActor->Destroy();
+		}
+	}
+}
+
 void FSpeedTreeImportModule::PluginButtonClicked()
 {
 	FString _fname = "C:/temp/trees.ustf";
@@ -107,13 +125,11 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 				
 		AActor* _foundTree = FindActorInSelected(*s);
 		
+		deleteActors(*s, _foundTree);
+
 		if (_foundTree == nullptr) continue;
 	
 		USphereComponent* RootComponent = NewObject<USphereComponent>(GEditor->GetEditorWorldContext().World()->GetCurrentLevel(), TEXT("root"));
-
-		
-		//UStaticMeshComponent* mesh =_foundTree->FindComponentByClass<UStaticMeshComponent>();
-		//mesh->AttachTo(RootComponent);
 
 		for (auto& v : _tmp)
 		{
@@ -124,14 +140,15 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 			_data[1].ParseIntoArray(_transform, TEXT("@"), false);
 			_transform[0].ParseIntoArray(_translate, TEXT(" "), false);
 			
-			AActor* _newTree = CreateCloneOfMyActor(_foundTree, FVector::ZeroVector/*FVector(FCString::Atof(*_translate[0]) * 100.0, FCString::Atof(*_translate[1]) * 100.0, FCString::Atof(*_translate[2]) * 100.0)*/, FRotator::ZeroRotator);
+			AActor* _newTree = CreateCloneOfMyActor(_foundTree, FVector::ZeroVector, FRotator::ZeroRotator);
 			_newTree->SetActorLabel(_data[0]);
 			//_newTree->AttachRootComponentToActor(_foundTree);
+			_newTree->SetFolderPath(FName(*FString::Printf(TEXT("SpeedTree/%s"), *s)));
+			
 		
 			// Set scale 
 			float _scaleZ = FCString::Atof(*_transform[2]);
-			
-		
+					
 			FTransform _uTransform;
 			_uTransform.SetIdentity();
 			_uTransform.SetRotation(FQuat(FVector(0, 0, 1), FMath::DegreesToRadians(FCString::Atof(*_transform[1]))));
@@ -139,24 +156,16 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 			_uTransform.SetScale3D(FVector(_scaleZ, _scaleZ, _scaleZ));
 
 			_newTree->SetActorTransform(_uTransform);
-			
-			//UInstancedStaticMeshComponent* instStaticMesh = NewObject<UInstancedStaticMeshComponent>(GEditor->GetEditorWorldContext().World()->GetCurrentLevel(), TEXT("lol"));
-			//instStaticMesh->AttachTo(RootComponent);						
-			//instStaticMesh->SetStaticMesh(mesh->StaticMesh);
-			//instStaticMesh->AddInstance(transform);
-			
-					
+							
 			_tmpString += _translate[0] + TEXT(" | ") + _translate[1] + TEXT(" | ") + _translate[2];
 			_tmpString += TEXT(", \n");
 		}	
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *_tmpString);
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *_tmpString);
 
 	GConfig->Flush(true, *_fname);
-
-
-
+	
 
 	//// Foliage
 	//

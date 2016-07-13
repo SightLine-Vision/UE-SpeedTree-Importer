@@ -20,6 +20,7 @@ public:
 
 	AActor* CreateCloneOfMyActor(AActor* ExistingActor, FVector SpawnLocation, FRotator SpawnRotation);
 	AActor* FindActorInSelected(FString ActorName);
+	void deleteActors(FString ActorName, AActor* mainActor);
 	
 private:
 
