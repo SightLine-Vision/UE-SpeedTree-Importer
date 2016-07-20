@@ -1,8 +1,8 @@
 {
-	"Changelist" : 3028348,
-	"BuildId" : "6b26d376-5321-4de4-8ad5-b57d20211d7c",
+	"Changelist" : 3039270,
+	"BuildId" : "637faffc-7d5f-4ebf-b8e2-937bd5298fc0",
 	"Modules" : 
 	{
-		"SpeedTreeImport" : "UE4Editor-SpeedTreeImport-1642.dll"
+		"SpeedTreeImport" : "UE4Editor-SpeedTreeImport.dll"
 	}
 }

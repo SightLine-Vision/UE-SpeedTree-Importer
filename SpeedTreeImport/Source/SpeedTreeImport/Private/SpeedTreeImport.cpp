@@ -57,6 +57,18 @@ void FSpeedTreeImportModule::ShutdownModule()
 	FSpeedTreeImportCommands::Unregister();
 }
 
+bool FSpeedTreeImportModule::isSpeedTree(AActor* TargetActor, bool bNested)
+{
+	FString _Folder = (TargetActor->GetFolderPath()).ToString();
+
+	TArray<FString> Parsed;
+
+	_Folder.ParseIntoArray(Parsed, TEXT("/"), false);
+
+	if (bNested) return Parsed[0] == "SpeedTree" && Parsed.Num() > 1;
+	return Parsed[0] == "SpeedTree" && Parsed.Num() == 1;
+}
+
 AActor* FSpeedTreeImportModule::CreateCloneOfMyActor(AActor* ExistingActor, FVector SpawnLocation, FRotator SpawnRotation)
 {
 	UWorld* World = ExistingActor->GetWorld();
@@ -77,7 +89,7 @@ AActor* FSpeedTreeImportModule::FindActorInSelected(FString ActorName)
 			
 		FString TreeName = TargetActor->GetName();
 		
-		if (TreeName.Contains(ActorName))
+		if (TreeName.Contains(ActorName) && isSpeedTree(TargetActor, false))
 		{
 			return TargetActor;
 		}
@@ -85,6 +97,7 @@ AActor* FSpeedTreeImportModule::FindActorInSelected(FString ActorName)
 	
 	return NULL;
 }
+
 
 void FSpeedTreeImportModule::deleteActors(FString ActorName, AActor* mainActor)
 {
@@ -96,13 +109,14 @@ void FSpeedTreeImportModule::deleteActors(FString ActorName, AActor* mainActor)
 
 		FString TreeName = TargetActor->GetName();
 		
-		if (TreeName.Contains(ActorName) && mainActor != TargetActor)
+		if (TreeName.Contains(ActorName) && isSpeedTree(TargetActor, true))
 		{
 			//GEditor->GetEditorWorldContext().World()->DestroyActor(TargetActor);
 			TargetActor->Destroy();
 		}
 	}
 }
+
 
 void FSpeedTreeImportModule::PluginButtonClicked()
 {
@@ -125,12 +139,10 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 				
 		AActor* _foundTree = FindActorInSelected(*s);
 		
-		deleteActors(*s, _foundTree);
-
 		if (_foundTree == nullptr) continue;
-	
-		USphereComponent* RootComponent = NewObject<USphereComponent>(GEditor->GetEditorWorldContext().World()->GetCurrentLevel(), TEXT("root"));
 
+		deleteActors(*s, _foundTree);
+	
 		for (auto& v : _tmp)
 		{
 			TArray<FString> _transform;
@@ -142,7 +154,7 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 			
 			AActor* _newTree = CreateCloneOfMyActor(_foundTree, FVector::ZeroVector, FRotator::ZeroRotator);
 			_newTree->SetActorLabel(_data[0]);
-			//_newTree->AttachRootComponentToActor(_foundTree);
+			
 			_newTree->SetFolderPath(FName(*FString::Printf(TEXT("SpeedTree/%s"), *s)));
 			
 		
@@ -162,7 +174,7 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 		}	
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *_tmpString);
+	//UE_LOG(LogTemp, Warning, TEXT("LOOOOOOOOOOOOL"));
 
 	GConfig->Flush(true, *_fname);
 	
