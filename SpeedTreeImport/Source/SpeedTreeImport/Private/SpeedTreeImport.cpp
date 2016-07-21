@@ -120,6 +120,10 @@ void FSpeedTreeImportModule::deleteActors(FString ActorName, AActor* mainActor)
 
 void FSpeedTreeImportModule::PluginButtonClicked()
 {
+	FText Title1 = FText::FromString(TEXT("Confirm action"));
+	FText DialogText1 = FText::FromString(TEXT("Do you really want to import trees?"));	
+	if (FMessageDialog::Open(EAppMsgType::YesNo, DialogText1, &Title1) == EAppReturnType::No) return;
+	
 	FString _fname = "C:/temp/trees.ustf";
 
 	TArray<FString> _secnames;
@@ -132,7 +136,7 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 	FString _tmpString;
 	
 	// Parse all data in section
-
+	int i = 0;
 	for (auto& s : _secnames)
 	{
 		GConfig->GetSection(*s, _tmp, *_fname);
@@ -164,20 +168,35 @@ void FSpeedTreeImportModule::PluginButtonClicked()
 			FTransform _uTransform;
 			_uTransform.SetIdentity();
 			_uTransform.SetRotation(FQuat(FVector(0, 0, 1), FMath::DegreesToRadians(FCString::Atof(*_transform[1]))));
-			_uTransform.SetLocation(FVector(FCString::Atof(*_translate[0]) * 100.0, FCString::Atof(*_translate[1]) * 100.0, FCString::Atof(*_translate[2]) * 100.0));
+			_uTransform.SetLocation(FVector(FCString::Atod(*_translate[0]), FCString::Atod(*_translate[1]), FCString::Atod(*_translate[2])));
 			_uTransform.SetScale3D(FVector(_scaleZ, _scaleZ, _scaleZ));
 
+			i++;
+
 			_newTree->SetActorTransform(_uTransform);
-							
-			_tmpString += _translate[0] + TEXT(" | ") + _translate[1] + TEXT(" | ") + _translate[2];
-			_tmpString += TEXT(", \n");
+			
+
+			//_tmpString += _translate[0] + TEXT(" | ") + _translate[1] + TEXT(" | ") + _translate[2];
+			//_tmpString += TEXT(", \n");
 		}	
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("LOOOOOOOOOOOOL"));
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), _tmpString);
 
 	GConfig->Flush(true, *_fname);
 	
+	if (i > 0)
+	{
+		FText Title2 = FText::FromString(TEXT("Import Success!"));
+		FString DialogText2 = FString::Printf(TEXT("Imported %d tree%s"), i, (i < 2) ? "" : "s");
+		FMessageDialog::Debugf(FText::FromString(DialogText2), &Title2);
+	}
+	else
+	{
+		FText Title3 = FText::FromString(TEXT("Import Failed!"));
+		FString DialogText3 = FString::Printf(TEXT("Please select at least %d main tree\nfrom \"SpeedTree\" folder!"), 1);
+		FMessageDialog::Debugf(FText::FromString(DialogText3), &Title3);
+	}
 
 	//// Foliage
 	//
